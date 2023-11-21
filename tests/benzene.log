@@ -1,0 +1,31 @@
+MSMS 2.6.1 started on mali
+Copyright M.F. Sanner (1994)
+Compilation flags -O2 -DVERBOSE -DTIMING
+INPUT  benzene.xyzr 12 spheres 0 collision only, radii  1.200 to  1.700
+PARAM  Probe_radius  1.500 density  1.000 hdensity  3.000
+REDUCED SURFACE ...
+    RS component 0 identified 9 3 10
+    0 free edge(s) found in component 0
+    RS component  #faces  #edges #free_edges  #vertices   genus
+         0          32       48          0         12      3
+    Time Reduced Surface real: 0.00 user: 0.00 sys: 0.00
+ANALYTICAL SOLVENT EXCLUDED SURFACE...
+    Component   0
+        Time Surface real: 0.00 user: 0.00 sys: 0.00
+        Time Singularities real: 0.00 user: 0.00 sys: 0.00
+    SES comp.  #fac.  #edg. #s_edg. #vert. #s_vert. R_h C_h genus
+         0       98    192      0      96        0   0   0    0
+ANALYTICAL SURFACE AREA :
+    Comp. probe_radius,   reent,    toric,   contact    SES       SAS
+      0       1.500       6.497    43.377    57.532   107.407   255.041
+TRIANGULATION...
+    Component 0
+    component#, vertices,  edges,  faces, genus, density
+        0            126     372     248    0     1.173
+        Time Triangulation real: 0.01 user: 0.00 sys: 0.00
+NUMERICAL VOLUMES AND AREA
+    Comp. probe_radius SES_volume SES_area)
+       0      1.50       69.850     95.305
+    Total ses_volume:    69.850
+MSMS terminated normally
+Total Time real: 0.01 user: 0.00 sys: 0.00
