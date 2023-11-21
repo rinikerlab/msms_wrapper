@@ -9,6 +9,14 @@ import numpy as np
 SurfaceParams = namedtuple("SurfaceParams", "probe_radius density hdensity")
 
 class MsmsOutput:
+    """
+    Class to hold the output of an Msms run
+
+    Attributes:
+    * log_lines: list of str with the lines of the standard output
+    * vertices: structured np.ndarray with the data from the .vert output file
+    * faces: structured np.ndarray with the data from the .face output file
+    """
 
     FACE_DTYPES = [
         ('i', 'int'),
@@ -47,7 +55,7 @@ class MsmsOutput:
             faces = face_data,
         )
 
-    def params(self):
+    def params(self) -> SurfaceParams:
         line_it = iter(self.log_lines)
         for line in line_it:
             if line.startswith("PARAM"):
@@ -56,7 +64,13 @@ class MsmsOutput:
                 return params
 
 
-def run_msms(xyz, radii, *args, **kwargs):
+def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
+    """Run msms with the given args and kwargs, return an MsmsOutput.
+
+    * args will be given to the subprocess.run as strings.
+    * kwargs will be formatted, i.e., when calling with density=2.0, will add
+      ['-density', '2.0'] to the argument list.
+    """
     xyz = np.asarray(xyz)
     radii = np.asarray(radii)
     if len(xyz.shape) != 2 or xyz.shape[1] != 3:
@@ -68,10 +82,10 @@ def run_msms(xyz, radii, *args, **kwargs):
         out_basename = os.path.join(tmp, "out")
         xyzr = np.hstack([xyz, radii[:, np.newaxis]])
         np.savetxt(xyzr_fname, xyzr)
-        formatted_kwargs = []
+        extra_args = [str(arg) for arg in args]
         for k, v in kwargs.items():
-            formatted_kwargs.extend(["-"+str(k), str(v)])
-        call = ["msms", "-if", xyzr_fname, "-of", out_basename, *args] + formatted_kwargs
+            extra_args.extend(["-"+str(k), str(v)])
+        call = ["msms", "-if", xyzr_fname, "-of", out_basename] + extra_args
         process = subprocess.run(call, cwd=tmp, capture_output=True)
         if process.returncode != 0:
             raise RuntimeError(f"msms returned nonzero return. stdout: {process.stdout}, stderr: {process.stderr}")
