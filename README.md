@@ -10,6 +10,7 @@ The wrapper is a single file (`msms/wrapper.py`), which you can copy into one of
 ## Use `msms` to compute the surface area of a unit sphere.
 * The SES and SAS are analyical.
 * The volume is numerical. In the case of a single sphere, it is always too small, but converges with high density.
+
 ```
 xyz = [[0., 0., 0.]]
 radii = [1.]
@@ -18,7 +19,14 @@ print('expected SAS', 4*np.pi * 2.5**2) # 2.5 = radius + probe_radius
 print('expected volume', 4/3*np.pi)
 msms.run_msms(xyz, radii, density=2).extract_ses_sas_vol()
 ```
+Output:
+```
+expected SES 12.566370614359172
+expected SAS 78.53981633974483
+expected volume 4.1887902047863905
 
+SizeDescriptors(ses=12.566, sas=78.54, volume=3.082)
+```
 ## Triangulated surfaces
 `run_msms` returns a `MsmsOutput` object.
 The triangulated surfaces are available as structured numpy arrays through the `.vertices` and `.faces` attributes of the `MsmsOutput`.
