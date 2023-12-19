@@ -5,9 +5,10 @@ import subprocess
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import shutil
 
 SurfaceParams = namedtuple("SurfaceParams", "probe_radius density hdensity")
-SizeDescriptors = namedtuple('SizeDescriptor', 'ses sas volume')
+SizeDescriptors = namedtuple('SizeDescriptors', 'ses sas volume')
 
 class MsmsOutput:
     """
@@ -144,3 +145,7 @@ def help() -> str:
     if process.returncode != 0:
         raise RuntimeError(f"msms -h returned nonzero return. stdout: {process.stdout}, stderr: {process.stderr}")
     return process.stderr.decode("utf-8")
+
+
+def msms_available() -> bool:
+    return shutil.which("msms") is not None
