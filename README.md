@@ -1,5 +1,5 @@
-# Python wrapper for the msms program
-`msms` is a command-line program that computes triangulated solvent-excluded surfaces. It is available from https://ccsb.scripps.edu/msms/.
+# Minimal Python wrapper for the msms program
+`msms` is a command-line program developed by Dr. Michel F. Sanner, that computes triangulated solvent-excluded surfaces. It is available from https://ccsb.scripps.edu/msms/.
 
 If you have `msms` installed on your computer, you can use this package as a Python interface for its basic functionality.
 
