@@ -28,9 +28,9 @@ expected volume 4.1887902047863905
 SizeDescriptors(ses=12.566, sas=78.54, volume=3.082)
 ```
 ## Triangulated surfaces
-`run_msms` returns a `MsmsOutput` object.
-The triangulated surfaces are available as structured numpy arrays through the `.vertices` and `.faces` attributes of the `MsmsOutput`.
-Additionally, there are convenience functions: `get_vertex_positions`, `get_vertex_normals`, and `get_face_indices`, to obtain the most important data as numpy arrays.
+* `run_msms` returns a `MsmsOutput` object.
+* Convenience functions: `get_vertex_positions`, `get_vertex_normals`, and `get_face_indices` return numpy arrays with the most important data.
+* structured numpy arrays: the `.vertices` and `.faces` attributes of `MsmsOutput` contain structured numpy arrays that contain basically all information in the `.vert` and `.face` files.
 
 ## Further examples
 See `examples.ipynb`
