@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 SurfaceParams = namedtuple("SurfaceParams", "probe_radius density hdensity")
+SizeDescriptors = namedtuple('SizeDescriptor', 'ses sas volume')
 
 class MsmsOutput:
     """
@@ -39,6 +40,7 @@ class MsmsOutput:
     ]
 
     def __init__(self, log_lines, vertices, faces):
+        """Create from lines of a logfile, and structured arrays."""
         self.log_lines = log_lines
         self.vertices = vertices
         self.faces = faces
@@ -46,6 +48,7 @@ class MsmsOutput:
 
     @classmethod
     def from_files(cls, log_file, vert_file, face_file):
+        """Create from file objects."""
         vert_data = np.loadtxt(vert_file, skiprows=3, dtype=cls.VERT_DTYPES)
         face_data = np.loadtxt(face_file, skiprows=3, dtype=cls.FACE_DTYPES)
         log_lines = log_file.readlines()
@@ -56,12 +59,49 @@ class MsmsOutput:
         )
 
     def params(self) -> SurfaceParams:
+        """Extract parameters of the msms run."""
         line_it = iter(self.log_lines)
         for line in line_it:
             if line.startswith("PARAM"):
                 elems = line.split()
                 params = SurfaceParams(float(elems[2]), float(elems[4]), float(elems[6]))
                 return params
+
+    def extract_ses_sas_vol(self) -> SizeDescriptors:
+        """Return the analytical SES and SAS, and the numerical volume."""
+        lines = iter(self.log_lines)
+        ses = None
+        sas = None
+        volume = None
+        for line in lines:
+            if line.startswith("ANALYTICAL SURFACE AREA :"):
+                next(lines)
+                entries = next(lines).split()
+                ses = float(entries[5])
+                sas = float(entries[6])
+            elif line.strip().startswith("Total ses_volume:"):
+                entries = line.split()
+                volume = float(entries[2])
+        if ses is None or sas is None:
+            raise ValueError("Could not find analytical surface area in the msms output.")
+        if volume is None:
+            raise ValueError("Could not find numerical SES volume in the msms output.")
+        return SizeDescriptors(ses, sas, volume)
+
+    def get_vertex_positions(self):
+        """return vertex positions (x, y, z) as regular numpy array."""
+        return np.stack([self.vertices['x'], self.vertices['y'], self.vertices['z']], axis=-1)
+
+    def get_vertex_normals(self):
+        """Return the vertex normals as regular numpy array."""
+        return np.stack([self.vertices['nx'], self.vertices['ny'], self.vertices['nz']], axis=-1)
+
+    def get_face_indices(self, zero_indexed=True):
+        """Return indices of triangles in self.faces, optionally zero-indexed."""
+        out = np.stack([self.faces['i'], self.faces['j'], self.faces['k']], axis=-1)
+        if zero_indexed:
+            out -= 1
+        return out
 
 
 def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
@@ -95,3 +135,12 @@ def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
             open(out_basename + ".face") as face_file
         ):
             return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file)
+
+
+def help() -> str:
+    """Obtain the msms help message."""
+    call = ["msms", "-h"]
+    process = subprocess.run(call, capture_output=True)
+    if process.returncode != 0:
+        raise RuntimeError(f"msms -h returned nonzero return. stdout: {process.stdout}, stderr: {process.stderr}")
+    return process.stderr.decode("utf-8")
