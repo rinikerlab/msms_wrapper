@@ -1,7 +1,14 @@
 # Minimal Python wrapper for the msms program
-`msms` is a command-line program developed by Dr. Michel F. Sanner, that computes triangulated solvent-excluded surfaces. It is available from https://ccsb.scripps.edu/msms/.
+This is a Python wrapper for the `msms` command-line program developed by Dr. Michel F. Sanner. It can be used to compute triangulated solvent-excluded surfaces of molecules, as well as their solvent-accessible surface (SAS), solvent excluded surface (SES), and molecular volume.
 
-If you have `msms` installed on your computer, you can use this package as a Python interface for its basic functionality.
+Note: While this wrapper is under the MIT licence, `msms` is not. This is an independent project and not affiliated to the `msms` program. You can obtain `msms` from https://ccsb.scripps.edu/msms/. For more information about the algorithm, see:
+
+Sanner, M. F., Olson A.J. & Spehner, J.-C. (1996). Reduced Surface: An Efficient Way to Compute Molecular Surfaces. Biopolymers 38:305-320.
+
+# Functionality
+If you have `msms` installed on your computer, you can use this package as a Python interface for its basic functionality. Supported features include
+* obtaining a triangulated surface based on atomic positions and radii.
+* obtain the SAS, SES, and molecular volume.
 
 # Installation
 The wrapper is a single file (`msms/wrapper.py`), which you can copy into one of your folders/projects. Alternatively, download this repository and run `pip install .`.
