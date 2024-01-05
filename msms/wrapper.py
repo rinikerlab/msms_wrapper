@@ -131,10 +131,8 @@ def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
         if process.returncode != 0:
             raise RuntimeError(f"msms returned nonzero return. stdout: {process.stdout}, stderr: {process.stderr}")
         log_filehandle = StringIO(process.stdout.decode("utf-8"))
-        with (
-            open(out_basename + ".vert") as vert_file,
-            open(out_basename + ".face") as face_file
-        ):
+        with open(out_basename + ".vert") as vert_file, \
+             open(out_basename + ".face") as face_file:
             return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file)
 
 
