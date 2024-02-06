@@ -18,6 +18,9 @@ class MsmsOutput:
     * log_lines: list of str with the lines of the standard output
     * vertices: structured np.ndarray with the data from the .vert output file
     * faces: structured np.ndarray with the data from the .face output file
+
+    Notes:
+    * currently assumes that -all_components is not set!
     """
 
     FACE_DTYPES = [
@@ -40,23 +43,35 @@ class MsmsOutput:
         ('face_type', 'int'),
     ]
 
-    def __init__(self, log_lines, vertices, faces):
+    AREA_DTYPES = [
+        ("sphere", int),
+        ("ses_0", float),
+        ("sas_0", float),
+    ]
+
+    def __init__(self, log_lines, vertices, faces, areas=None):
         """Create from lines of a logfile, and structured arrays."""
         self.log_lines = log_lines
         self.vertices = vertices
         self.faces = faces
+        self.areas = areas
         return
 
     @classmethod
-    def from_files(cls, log_file, vert_file, face_file):
+    def from_files(cls, log_file, vert_file, face_file, area_file=None):
         """Create from file objects."""
         vert_data = np.loadtxt(vert_file, skiprows=3, dtype=cls.VERT_DTYPES)
         face_data = np.loadtxt(face_file, skiprows=3, dtype=cls.FACE_DTYPES)
+        if area_file:
+            area_data = np.loadtxt(area_file, skiprows=1, dtype=cls.AREA_DTYPES)
+        else:
+            area_data = None
         log_lines = log_file.readlines()
         return cls(
             log_lines = log_lines,
             vertices = vert_data,
             faces = face_data,
+            areas = area_data
         )
 
     def params(self) -> SurfaceParams:
@@ -104,10 +119,18 @@ class MsmsOutput:
             out -= 1
         return out
 
+    def get_ses_per_sphere(self):
+        return self.areas["ses_0"]
 
-def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
+    def get_sas_per_sphere(self):
+        return self.areas["sas_0"]
+
+
+
+def run_msms(xyz, radii, compute_area=False, *args, **kwargs) -> MsmsOutput:
     """Run msms with the given args and kwargs, return an MsmsOutput.
 
+    * compute_area: run msms with -af and pass the area file to MsmsOutput.
     * args will be given to the subprocess.run as strings.
     * kwargs will be formatted, i.e., when calling with density=2.0, will add
       ['-density', '2.0'] to the argument list.
@@ -126,14 +149,22 @@ def run_msms(xyz, radii, *args, **kwargs) -> MsmsOutput:
         extra_args = [str(arg) for arg in args]
         for k, v in kwargs.items():
             extra_args.extend(["-"+str(k), str(v)])
+        if compute_area:
+            extra_args.extend(["-af", out_basename])
         call = ["msms", "-if", xyzr_fname, "-of", out_basename] + extra_args
         process = subprocess.run(call, cwd=tmp, capture_output=True)
         if process.returncode != 0:
             raise RuntimeError(f"msms returned nonzero return. stdout: {process.stdout}, stderr: {process.stderr}")
         log_filehandle = StringIO(process.stdout.decode("utf-8"))
-        with open(out_basename + ".vert") as vert_file, \
-             open(out_basename + ".face") as face_file:
-            return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file)
+        if compute_area:
+            with open(out_basename + ".vert") as vert_file, \
+                 open(out_basename + ".face") as face_file, \
+                 open(out_basename + ".area") as area_file:
+                return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file, area_file=area_file)
+        else:
+            with open(out_basename + ".vert") as vert_file, \
+                 open(out_basename + ".face") as face_file:
+                return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file)
 
 
 def help() -> str:
