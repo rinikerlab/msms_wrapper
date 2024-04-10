@@ -127,10 +127,11 @@ class MsmsOutput:
 
 
 
-def run_msms(xyz, radii, compute_area=False, *args, **kwargs) -> MsmsOutput:
+def run_msms(xyz, radii, *args, compute_area=False, temp_dir=None, **kwargs) -> MsmsOutput:
     """Run msms with the given args and kwargs, return an MsmsOutput.
 
     * compute_area: run msms with -af and pass the area file to MsmsOutput.
+    * temp_dir: parent directory of the temporary directory for the msms run.
     * args will be given to the subprocess.run as strings.
     * kwargs will be formatted, i.e., when calling with density=2.0, will add
       ['-density', '2.0'] to the argument list.
@@ -141,7 +142,7 @@ def run_msms(xyz, radii, compute_area=False, *args, **kwargs) -> MsmsOutput:
         raise ValueError("xyz must have shape (N, 3)")
     if radii.shape != (xyz.shape[0],):
         raise ValueError(f"radii must have shape ({xyz.shape[0]},), not {radii.shape}")
-    with TemporaryDirectory() as tmp:
+    with TemporaryDirectory(dir=temp_dir) as tmp:
         xyzr_fname = os.path.join(tmp, "input.xyzr")
         out_basename = os.path.join(tmp, "out")
         xyzr = np.hstack([xyz, radii[:, np.newaxis]])
