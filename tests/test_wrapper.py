@@ -63,3 +63,18 @@ def test_uses_extra_args():
 def test_uses_extra_kwargs():
     out = msms.run_msms(BENZENE_COORDS, BENZENE_RADII, density=2.0)
     assert out.params().density == 2.0
+
+def test_check_small_atoms():
+    coords = [[0., 0., 0.], [0., 0.3, 0.], [0., 0.6, 0.]]
+    rad = 2.0
+    solv_rad = 1.5
+    radii = [1.0, rad, 1.0]
+    with pytest.raises(FileNotFoundError):
+        msms.run_msms(coords, radii, check_small_atoms=False)
+    out = msms.run_msms(coords, radii, check_small_atoms=True)
+    ses, sas, vol = out.extract_ses_sas_vol()
+    assert sas == pytest.approx(4*np.pi*(rad+solv_rad)**2)
+    larger_radii = [1.8, rad, 1.8]
+    out_checked = msms.run_msms(coords, larger_radii, check_small_atoms=True)
+    out_unchecked = msms.run_msms(coords, larger_radii, check_small_atoms=False)
+    assert np.allclose(out_checked.extract_ses_sas_vol(), out_unchecked.extract_ses_sas_vol())

@@ -3,6 +3,7 @@ from io import StringIO
 import os.path
 import subprocess
 from tempfile import TemporaryDirectory
+from scipy.spatial import KDTree
 
 import numpy as np
 import shutil
@@ -127,17 +128,21 @@ class MsmsOutput:
 
 
 
-def run_msms(xyz, radii, *args, compute_area=False, temp_dir=None, **kwargs) -> MsmsOutput:
+def run_msms(xyz, radii, *args, compute_area=False, temp_dir=None, check_small_atoms=False, **kwargs) -> MsmsOutput:
     """Run msms with the given args and kwargs, return an MsmsOutput.
 
     * compute_area: run msms with -af and pass the area file to MsmsOutput.
     * temp_dir: parent directory of the temporary directory for the msms run.
+    * check_small_atoms: if True, remove atoms from the structure if they are
+      inside their nearest-neighbor atom.
     * args will be given to the subprocess.run as strings.
     * kwargs will be formatted, i.e., when calling with density=2.0, will add
       ['-density', '2.0'] to the argument list.
     """
     xyz = np.asarray(xyz)
     radii = np.asarray(radii)
+    if check_small_atoms:
+        return _run_msms_check_small_atoms(xyz, radii, *args, compute_area=compute_area, temp_dir=temp_dir, **kwargs)
     if len(xyz.shape) != 2 or xyz.shape[1] != 3:
         raise ValueError("xyz must have shape (N, 3)")
     if radii.shape != (xyz.shape[0],):
@@ -167,6 +172,18 @@ def run_msms(xyz, radii, *args, compute_area=False, temp_dir=None, **kwargs) -> 
                  open(out_basename + ".face") as face_file:
                 return MsmsOutput.from_files(log_file=log_filehandle, vert_file=vert_file, face_file=face_file)
 
+def _run_msms_check_small_atoms(xyz, radii, *args, **kwargs):
+    """Fix cases where a few atoms are completely inside other atoms.
+
+    Note: This only checks if an atom is inside its nearest neighbor! It might
+    fail when radii are too uneven.
+    """
+    tree = KDTree(xyz)
+    dist, ind = tree.query(xyz, k=2)
+    nbr_dist = dist[:, 1]
+    nbr_radii = radii[ind[:, 1]]
+    good_atoms = radii > (nbr_radii - nbr_dist)
+    return run_msms(xyz[good_atoms], radii[good_atoms], *args, **kwargs)
 
 def help() -> str:
     """Obtain the msms help message."""
